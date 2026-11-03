@@ -1,55 +1,86 @@
-import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { DuesProvider } from '@/context/DuesContext';
+import { FinanceProvider, useFinance } from '@/context/FinanceContext';
+import { AppThemeProvider, useAppTheme } from '@/context/ThemeContext';
+import { Body } from '@/components/ui/Typography';
 
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from 'expo-router';
+export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   anchor: '(tabs)',
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
-  useEffect(() => {
-    if (error) throw error;
-  }, [error]);
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
-  return <RootLayoutNav />;
+  return (
+    <AppThemeProvider>
+      <FinanceProvider>
+        <DuesProvider>
+          <RootLayoutNav />
+        </DuesProvider>
+      </FinanceProvider>
+    </AppThemeProvider>
+  );
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+  const { scheme, colors } = useAppTheme();
+  const { ready, error } = useFinance();
+
+  useEffect(() => {
+    if (ready || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [ready, error]);
+
+  const navTheme = scheme === 'dark' ? DarkTheme : DefaultTheme;
+
+  if (error) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background, padding: 24 }}>
+        <Body style={{ textAlign: 'center' }}>{error}</Body>
+      </View>
+    );
+  }
+
+  if (!ready) {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
+        <ActivityIndicator color={colors.tint} size="large" />
+      </View>
+    );
+  }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
+    <ThemeProvider
+      value={{
+        ...navTheme,
+        colors: {
+          ...navTheme.colors,
+          background: colors.background,
+          card: colors.surface,
+          text: colors.text,
+          border: colors.border,
+          primary: colors.tint,
+        },
+      }}>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      <Stack screenOptions={{ headerShadowVisible: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+        <Stack.Screen
+          name="transaction/[id]"
+          options={{ title: 'Transaction', presentation: 'modal' }}
+        />
+        <Stack.Screen name="due-entry" options={{ title: 'Record due', presentation: 'modal' }} />
+        <Stack.Screen name="person/[name]" options={{ title: 'Person' }} />
       </Stack>
     </ThemeProvider>
   );

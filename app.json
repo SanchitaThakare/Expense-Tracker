@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "expense-tracker",
+    "name": "Expense Tracker",
     "slug": "expense-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -11,8 +11,11 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.expensetracker.app",
+      "permissions": ["RECORD_AUDIO"],
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0F766E",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -25,13 +28,25 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "expo-dev-client",
       "expo-router",
       [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#0F766E"
+        }
+      ],
+      "expo-sqlite",
+      "expo-sharing",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow Expense Tracker to hear a phrase about money you gave someone.",
+          "speechRecognitionPermission": "Allow Expense Tracker to turn that phrase into text on this phone.",
+          "androidSpeechServicePackages": ["com.google.android.googlequicksearchbox"]
         }
       ]
     ],
